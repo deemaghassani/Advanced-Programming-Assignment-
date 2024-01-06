@@ -1,0 +1,85 @@
+package comp.pkg20014.pkg1;
+import java.io.*;
+import java.net.*;
+import java.sql.*;
+public class Server {
+ public static void main(String[] args) {
+ try {
+ ServerSocket serverSocket = new ServerSocket(12345); // Use an appropriate port number
+ while (true) {
+ Socket clientSocket = serverSocket.accept();
+       // create and start a thread for each client
+ ServerThread serverThread = new ServerThread(clientSocket);
+ serverThread.start();
+ }
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ }
+}
+class ServerThread extends Thread {
+ private Socket clientSocket;
+ public ServerThread(Socket clientSocket) {
+ this.clientSocket = clientSocket;
+ }
+ @Override
+ public void run() {
+ try (
+ ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+ ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+ ) {
+
+// create a thread using extending the thread class or implementing a runnable interface 
+and implement a run method.
+	
+// after receiving the option from the client side, the server should make a connection to the database.
+ Connection connection = 
+DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+	
+// search the database using the option to retrieve the appropriate discount.
+ int option = in.readInt();
+ double discount = retrieveDiscountFromDatabase(connection, option);
+
+// the user assigns the number of days and the ticket price on the server, then calculates 
+the price (CP = ticket price * days), 
+       // discount and the final price
+ int days = calculateDays(option); // Implement this method based on your logic
+ double ticketPrice = 100; // Assume ticket price (to be provided by the student)
+ double calculatedPrice = ticketPrice * days;
+ double discountedPrice = calculatedPrice - (calculatedPrice * discount);
+ double finalPrice = calculatedPrice - discountedPrice;
+
+// return to the client the calculated price, discount, and the final price.
+ out.writeDouble(calculatedPrice);
+ out.writeDouble(discountedPrice);
+ out.writeDouble(finalPrice);
+ out.flush();
+
+// close the connection with the database when done.
+ connection.close();
+ clientSocket.close();
+ } catch (IOException | SQLException e) {
+ e.printStackTrace();
+ }
+ }
+       // helper method to retrieve discount from the database
+ private double retrieveDiscountFromDatabase(Connection connection, int option) throws 
+SQLException {
+ PreparedStatement preparedStatement = connection.prepareStatement("SELECT Discount 
+FROM data WHERE Option = ?");
+ preparedStatement.setInt(1, option);
+ ResultSet resultSet = preparedStatement.executeQuery();
+ double discount = 0.0;
+ if (resultSet.next()) {
+ discount = resultSet.getDouble("Discount");
+ }
+ resultSet.close();
+ preparedStatement.close();
+ return discount;
+ }
+       // helper method to calculate days based on the option
+ private int calculateDays(int option) {
+       // implement logic here
+ return 0;
+ }
+}
